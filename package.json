@@ -2,6 +2,14 @@
   "name": "agents-ram",
   "version": "1.0.0",
   "description": "Agents RAM — memoria persistente 100% local para Claude Code, Codex y Cursor (hooks + MCP + SQLite FTS5, sin nube ni tokens).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jairsemblantes01/agents-ram.git"
+  },
+  "homepage": "https://github.com/jairsemblantes01/agents-ram#readme",
+  "bugs": {
+    "url": "https://github.com/jairsemblantes01/agents-ram/issues"
+  },
   "bin": {
     "mem-search": "./bin/search.js",
     "agents-ram-mcp": "./bin/mcp.js"

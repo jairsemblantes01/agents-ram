@@ -87,7 +87,7 @@ Cursor the agent gets memory at session start and through the MCP tools.
 ## Quick start
 
 ```bash
-git clone https://github.com/<your-username>/agents-ram.git
+git clone https://github.com/jairsemblantes01/agents-ram.git
 cd agents-ram
 npm install
 node bin/install.js        # registers hooks + MCP in every client it finds
@@ -190,7 +190,8 @@ see each other's memory.
 ### 1. Get the code
 
 ```bash
-git clone https://github.com/<your-username>/agents-ram.git
+git clone https://github.com/jairsemblantes01/agents-ram.git   # or, with SSH:
+# git clone git@github.com:jairsemblantes01/agents-ram.git
 cd agents-ram
 npm install
 ```
