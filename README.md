@@ -30,9 +30,6 @@ right moment. A decision made in Cursor at 10:00 is there when you open Claude C
 
 The whole thing is a few hundred lines of plain Node.js you can read in one sitting.
 
-> Formerly **Claude RAM**. Existing installs keep working; see
-> [Migrating from Claude RAM](#migrating-from-claude-ram).
-
 ## Contents
 
 - [Highlights](#highlights)
@@ -47,7 +44,6 @@ The whole thing is a few hundred lines of plain Node.js you can read in one sitt
 - [Troubleshooting](#troubleshooting)
 - [Project layout](#project-layout)
 - [Development](#development)
-- [Migrating from Claude RAM](#migrating-from-claude-ram)
 - [Uninstall](#uninstall)
 - [Limitations and roadmap](#limitations-and-roadmap)
 - [License](#license)
@@ -466,24 +462,6 @@ npm test
 The tests use a temporary database and never touch your memory. They cover redaction, search and
 scoping, retention, the client adapters (including the real hooks run with Cursor and Codex
 payloads), the MCP server over stdio, the installer's config merging and the legacy fallbacks.
-
-## Migrating from Claude RAM
-
-Agents RAM is the same project under a new name, now that it serves more than one agent. To
-upgrade an existing install:
-
-```bash
-node bin/install.js    # from the new folder
-```
-
-- Hook entries that point to an old `claude-ram` folder are replaced, and the MCP server registered
-  as `claude-ram` is removed in favour of `agents-ram`.
-- Data in `~/.claude/claude-ram/` keeps being used until `~/.local/share/agents-ram/` exists. To
-  move it, close your agents and run
-  `mv ~/.claude/claude-ram ~/.local/share/agents-ram`.
-- `CLAUDE_RAM_*` environment variables are still read when the `AGENTS_RAM_*` one is not set.
-- An existing `~/claude-ram-vault` keeps being used by the Obsidian export.
-- Memory recorded before the multi-client version has `source = claude`.
 
 ## Uninstall
 
