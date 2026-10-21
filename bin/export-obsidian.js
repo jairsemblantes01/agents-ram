@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 // Exporta la memoria como una bóveda de Obsidian para usar su vista de grafo:
 // una nota por sesión, una por proyecto, y enlaces entre sesiones parecidas.
-// Por defecto escribe en ~/agents-ram-vault (o en ~/claude-ram-vault si ya
-// existía de antes del cambio de nombre), NO en tu bóveda Cerebro: esa la
+// Por defecto escribe en ~/agents-ram-vault, NO en tu bóveda Cerebro: esa la
 // mantiene Claude con su propio esquema y no debe mezclarse con memoria de máquina.
 const fs = require('fs');
 const os = require('os');
@@ -10,13 +9,7 @@ const path = require('path');
 const { openDb } = require('../lib/db');
 const { buildGraph, projectName } = require('../lib/graph');
 
-function defaultVault() {
-  const vault = path.join(os.homedir(), 'agents-ram-vault');
-  const legacy = path.join(os.homedir(), 'claude-ram-vault');
-  return !fs.existsSync(vault) && fs.existsSync(legacy) ? legacy : vault;
-}
-
-const out = path.resolve(process.argv[2] || defaultVault());
+const out = path.resolve(process.argv[2] || path.join(os.homedir(), 'agents-ram-vault'));
 const db = openDb();
 const graph = buildGraph(db, { limit: 3000 });
 

@@ -11,7 +11,7 @@ const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const {
-  MCP_NAME, LEGACY_MCP_NAMES, MCP_SERVER, hooksFile, withHooks, withoutHooks, withCursorMcp, withCodexMcp,
+  MCP_NAME, MCP_SERVER, hooksFile, withHooks, withoutHooks, withCursorMcp, withCodexMcp,
   readText, readJsonFile, writeFile,
 } = require('../lib/install');
 
@@ -45,7 +45,7 @@ function installHooks(client, { dryRun, uninstall }) {
   const replaced = uninstall ? [] : res.replaced;
   if (events.length === 0 && replaced.length === 0) return console.log(`  - hooks: ${uninstall ? 'no había' : 'ya estaban'} (${short(file)})`);
   writeFile(file, JSON.stringify(res.config, null, 2) + '\n', { dryRun });
-  if (replaced.length) console.log(`  ✓ hooks de una copia vieja quitados: ${replaced.join(', ')} (${short(file)})`);
+  if (replaced.length) console.log(`  ✓ hooks que apuntaban a otra carpeta quitados: ${replaced.join(', ')} (${short(file)})`);
   if (events.length) console.log(`  ✓ hooks ${uninstall ? 'quitados' : 'agregados'}: ${events.join(', ')} (${short(file)})`);
 }
 
@@ -70,11 +70,6 @@ function installClaudeMcp({ dryRun, uninstall }) {
   const claude = (...a) => spawnSync('claude', a, { encoding: 'utf-8' });
   const probe = claude('mcp', 'get', MCP_NAME);
   if (probe.error) return console.log(`  ! MCP: no encontré el comando \`claude\`; regístralo con: claude mcp add --scope user ${MCP_NAME} -- node ${MCP_SERVER}`);
-  for (const legacy of LEGACY_MCP_NAMES) {
-    if (claude('mcp', 'get', legacy).status !== 0) continue;
-    if (!dryRun) claude('mcp', 'remove', legacy, '-s', 'user');
-    console.log(`  ✓ MCP con el nombre viejo quitado: ${legacy} (claude mcp)`);
-  }
   const present = probe.status === 0;
   if (present !== uninstall) return console.log(`  - MCP: ${uninstall ? 'no estaba' : 'ya estaba'} (claude mcp)`);
   if (!dryRun) {

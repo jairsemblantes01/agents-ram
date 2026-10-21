@@ -438,7 +438,7 @@ agents-ram/
 │   ├── summarize.js        summaries, secret redaction, term extraction, dedupe
 │   ├── graph.js            similarity graph for the dashboard and the Obsidian export
 │   ├── install.js          config merging logic used by bin/install.js
-│   └── paths.js            data location and environment variables (with legacy fallbacks)
+│   └── paths.js            data location and environment variables
 ├── bin/
 │   ├── install.js          register / unregister in Claude Code, Codex and Cursor
 │   ├── mcp.js              MCP server (stdio, no dependencies)
@@ -461,7 +461,7 @@ npm test
 
 The tests use a temporary database and never touch your memory. They cover redaction, search and
 scoping, retention, the client adapters (including the real hooks run with Cursor and Codex
-payloads), the MCP server over stdio, the installer's config merging and the legacy fallbacks.
+payloads), the MCP server over stdio and the installer's config merging.
 
 ## Uninstall
 

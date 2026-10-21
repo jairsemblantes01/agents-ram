@@ -74,8 +74,8 @@ test('withCodexMcp: agrega el bloque TOML y lo quita con sus subtablas, sin toca
   assert.match(removed, /\[profiles\.rapido\]\nmodel = "o4"/);
 });
 
-test('withHooks: reemplaza las entradas que apuntan a la carpeta vieja claude-ram, sin duplicar', () => {
-  const old = (f, flag = '') => `node /home/u/proyectos/claude-ram/hooks/${f}${flag}`;
+test('withHooks: reemplaza las entradas de una copia del proyecto en otra carpeta, sin duplicar', () => {
+  const old = (f) => `node /home/u/viejo/agents-ram/hooks/${f}`;
   const start = {
     hooks: {
       Stop: [{ hooks: [foreign] }, { hooks: [{ type: 'command', command: old('stop.js') }] }],
@@ -85,21 +85,10 @@ test('withHooks: reemplaza las entradas que apuntan a la carpeta vieja claude-ra
   const { config, added, replaced } = withHooks(start, 'claude', 'node');
   assert.deepStrictEqual(replaced.sort(), ['SessionStart', 'Stop']);
   assert.strictEqual(added.length, 4);
-  assert.doesNotMatch(JSON.stringify(config), /\/home\/u\/proyectos\/claude-ram/);
+  assert.doesNotMatch(JSON.stringify(config), /\/home\/u\/viejo/);
   assert.deepStrictEqual(config.hooks.Stop[0], { hooks: [foreign] });
   assert.strictEqual(config.hooks.Stop.length, 2);
 
-  // Desinstalar también reconoce las entradas viejas como propias.
+  // Desinstalar también reconoce esas entradas como propias.
   assert.deepStrictEqual(withoutHooks(start, 'claude').config.hooks, { Stop: [{ hooks: [foreign] }] });
-});
-
-test('MCP: el servidor con el nombre viejo claude-ram se quita al instalar', () => {
-  const cursor = withCursorMcp({ mcpServers: { 'claude-ram': { command: 'x' }, otro: { command: 'y' } } }, NODE).config;
-  assert.deepStrictEqual(Object.keys(cursor.mcpServers).sort(), ['agents-ram', 'otro']);
-
-  const toml = '[mcp_servers.claude-ram]\ncommand = "node"\nargs = ["/viejo/mcp.js"]\n\n[mcp_servers.otro]\ncommand = "x"\n';
-  const { text } = withCodexMcp(toml, NODE);
-  assert.doesNotMatch(text, /\[mcp_servers\.claude-ram\]|\/viejo\/mcp\.js/);
-  assert.match(text, /\[mcp_servers\.otro\]/);
-  assert.match(text, /\[mcp_servers\.agents-ram\]/);
 });
