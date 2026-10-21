@@ -4,15 +4,16 @@ const { spawn } = require('child_process');
 const { openDb, recentMeaningful, recentObservations, pruneToolUse } = require('../lib/db');
 const { truncateMiddle, dedupeSimilar } = require('../lib/summarize');
 const { readStdinJson, emitContext, safeRun } = require('../lib/hook-io');
+const { env } = require('../lib/paths');
 
 const RECENT_LIMIT = 8;
 const LINE_MAX_CHARS = 260;
 const BACKFILL_BATCH = 300;
 
-// Poda opcional: solo si defines CLAUDE_RAM_PRUNE_DAYS (>= 7). Sin la variable
+// Poda opcional: solo si defines AGENTS_RAM_PRUNE_DAYS (>= 7). Sin la variable
 // no se borra nada nunca.
 function pruneDays() {
-  const n = Number(process.env.CLAUDE_RAM_PRUNE_DAYS);
+  const n = Number(env('PRUNE_DAYS'));
   return Number.isFinite(n) && n >= 7 ? n : null;
 }
 
@@ -54,7 +55,7 @@ safeRun(() => {
     .join('\n');
 
   const context = [
-    'Memoria local de Claude RAM para este proyecto (sesiones pasadas, de la más antigua a la más reciente).',
+    'Memoria local de Agents RAM para este proyecto (sesiones pasadas, de la más antigua a la más reciente).',
     'Son notas sin verificar: el estado real (servidores, despliegues, archivos) pudo cambiar desde la fecha indicada. Compruébalo antes de darlo por cierto.',
     lines,
     '',

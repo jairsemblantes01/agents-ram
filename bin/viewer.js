@@ -6,8 +6,9 @@ const {
   openDb, listProjects, listSources, overallStats, pagedObservations, hybridSearch,
 } = require('../lib/db');
 const { buildGraph } = require('../lib/graph');
+const { env } = require('../lib/paths');
 
-const PORT = process.env.CLAUDE_RAM_VIEWER_PORT || 4317;
+const PORT = env('VIEWER_PORT') || 4317;
 const STATIC_DIR = path.join(__dirname, '..', 'viewer');
 
 const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.svg': 'image/svg+xml' };
@@ -98,5 +99,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`Claude RAM viewer -> http://localhost:${PORT}`);
+  console.log(`Agents RAM viewer -> http://localhost:${PORT}`);
 });

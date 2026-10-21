@@ -1,17 +1,17 @@
 #!/usr/bin/env node
-// Instala Claude RAM en Claude Code, Codex y Cursor: los cuatro hooks y el
+// Instala Agents RAM en Claude Code, Codex y Cursor: los cuatro hooks y el
 // servidor MCP, con una sola base de memoria. Es idempotente y conserva el
 // resto de cada archivo (deja un .bak antes de cambiarlo).
 //   node bin/install.js                    todos los clientes presentes
 //   node bin/install.js --client cursor    solo uno (claude | codex | cursor)
 //   node bin/install.js --dry-run          muestra qué haría, sin escribir
-//   node bin/install.js --uninstall        quita solo lo de Claude RAM
+//   node bin/install.js --uninstall        quita solo lo de Agents RAM
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const {
-  MCP_NAME, MCP_SERVER, hooksFile, withHooks, withoutHooks, withCursorMcp, withCodexMcp,
+  MCP_NAME, LEGACY_MCP_NAMES, MCP_SERVER, hooksFile, withHooks, withoutHooks, withCursorMcp, withCodexMcp,
   readText, readJsonFile, writeFile,
 } = require('../lib/install');
 
@@ -42,9 +42,11 @@ function installHooks(client, { dryRun, uninstall }) {
   const config = readJsonFile(file);
   const res = uninstall ? withoutHooks(config, client) : withHooks(config, client, client === 'claude' ? 'node' : NODE);
   const events = uninstall ? res.removed : res.added;
-  if (events.length === 0) return console.log(`  - hooks: ${uninstall ? 'no había' : 'ya estaban'} (${short(file)})`);
+  const replaced = uninstall ? [] : res.replaced;
+  if (events.length === 0 && replaced.length === 0) return console.log(`  - hooks: ${uninstall ? 'no había' : 'ya estaban'} (${short(file)})`);
   writeFile(file, JSON.stringify(res.config, null, 2) + '\n', { dryRun });
-  console.log(`  ✓ hooks ${uninstall ? 'quitados' : 'agregados'}: ${events.join(', ')} (${short(file)})`);
+  if (replaced.length) console.log(`  ✓ hooks de una copia vieja quitados: ${replaced.join(', ')} (${short(file)})`);
+  if (events.length) console.log(`  ✓ hooks ${uninstall ? 'quitados' : 'agregados'}: ${events.join(', ')} (${short(file)})`);
 }
 
 function installCursorMcp({ dryRun, uninstall }) {
@@ -68,6 +70,11 @@ function installClaudeMcp({ dryRun, uninstall }) {
   const claude = (...a) => spawnSync('claude', a, { encoding: 'utf-8' });
   const probe = claude('mcp', 'get', MCP_NAME);
   if (probe.error) return console.log(`  ! MCP: no encontré el comando \`claude\`; regístralo con: claude mcp add --scope user ${MCP_NAME} -- node ${MCP_SERVER}`);
+  for (const legacy of LEGACY_MCP_NAMES) {
+    if (claude('mcp', 'get', legacy).status !== 0) continue;
+    if (!dryRun) claude('mcp', 'remove', legacy, '-s', 'user');
+    console.log(`  ✓ MCP con el nombre viejo quitado: ${legacy} (claude mcp)`);
+  }
   const present = probe.status === 0;
   if (present !== uninstall) return console.log(`  - MCP: ${uninstall ? 'no estaba' : 'ya estaba'} (claude mcp)`);
   if (!dryRun) {
@@ -82,7 +89,7 @@ function installClaudeMcp({ dryRun, uninstall }) {
 function run(args) {
   // Sin --client: Claude Code siempre, Codex y Cursor solo si están instalados.
   const targets = args.client ? [args.client] : CLIENTS.filter((c) => c === 'claude' || fs.existsSync(path.join(home, DIRS[c])));
-  console.log(`Claude RAM · ${args.uninstall ? 'desinstalar' : 'instalar'}${args.dryRun ? ' (simulación, no se escribe nada)' : ''}`);
+  console.log(`Agents RAM · ${args.uninstall ? 'desinstalar' : 'instalar'}${args.dryRun ? ' (simulación, no se escribe nada)' : ''}`);
   for (const client of targets) {
     console.log(`\n${NAMES[client]}`);
     installHooks(client, args);

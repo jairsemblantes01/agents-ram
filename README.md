@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="viewer/logo.svg" width="72" height="72" alt="Claude RAM logo">
+  <img src="viewer/logo.svg" width="72" height="72" alt="Agents RAM logo">
 </p>
 
-<h1 align="center">Claude RAM</h1>
+<h1 align="center">Agents RAM</h1>
 
 <p align="center">
-  <b>Persistent memory for Claude Code that never leaves your machine.</b><br>
-  No login, no cloud, no token, no subscription — just SQLite, local embeddings, and four hooks.
+  <b>One persistent memory for Claude Code, Codex and Cursor that never leaves your machine.</b><br>
+  No login, no cloud, no token, no subscription — just SQLite, local embeddings, four hooks and an MCP server.
 </p>
 
 <p align="center">
@@ -18,10 +18,15 @@
 
 ---
 
-Claude Code forgets everything the moment a session ends. Claude RAM fixes that by hooking into
+Coding agents forget everything the moment a session ends. Agents RAM fixes that by hooking into
 the session lifecycle, writing a compact record of what happened to a local SQLite database, and
-feeding relevant memory back in at the right moments — so Claude stops asking you to re-explain
-decisions you already made yesterday.
+feeding relevant memory back in at the right moments — so your agent stops asking you to re-explain
+decisions you already made yesterday. Claude Code, Codex and Cursor all share the same memory:
+what you decided in one is there when you open another.
+
+> Formerly **Claude RAM**. Existing installs keep working: `CLAUDE_RAM_*` variables are still read,
+> and data in `~/.claude/claude-ram/` is used until you move it. `node bin/install.js` replaces
+> the old hook and MCP entries.
 
 It was built as a minimal, self-hosted alternative for people who want the "persistent memory"
 idea without an account, a hosted service, or a companion token — everything here fits in a few
@@ -42,7 +47,7 @@ hundred lines you can read in one sitting.
 
 ## Features
 
-- **100% local** — everything lives in `~/.claude/claude-ram/memory.db`. No account, no network
+- **100% local** — everything lives in `~/.local/share/agents-ram/memory.db`. No account, no network
   calls except to your own Ollama instance on `localhost`.
 - **Hybrid search** — SQLite FTS5 (keyword) and local embeddings via [Ollama](https://ollama.com)
   (`nomic-embed-text`) fused with Reciprocal Rank Fusion, so both literal and conceptual matches
@@ -89,7 +94,7 @@ flowchart LR
 
 Every observation is tagged with the project's `cwd`, so memory from one project never leaks
 into another. Each hook fails safe: any internal error is logged to stderr and swallowed — a bug
-in Claude RAM will never break your Claude Code session.
+in Agents RAM will never break your agent's session.
 
 ## Requirements
 
@@ -101,8 +106,8 @@ in Claude RAM will never break your Claude Code session.
 ## Installation
 
 ```bash
-git clone https://github.com/<your-username>/claude-ram.git
-cd claude-ram
+git clone https://github.com/<your-username>/agents-ram.git
+cd agents-ram
 npm install
 ```
 
@@ -112,30 +117,30 @@ Register the hooks and the MCP server in every client you use with one command:
 node bin/install.js                  # Claude Code, plus Codex and Cursor if ~/.codex or ~/.cursor exist
 node bin/install.js --client cursor  # just one: claude | codex | cursor
 node bin/install.js --dry-run        # show what would change, write nothing
-node bin/install.js --uninstall      # remove only Claude RAM's entries
+node bin/install.js --uninstall      # remove only Agents RAM's entries
 ```
 
 It is idempotent, keeps everything else in each file, and saves a `.bak` before changing one.
 In Codex, run `/hooks` once afterwards to trust the new hooks.
 
 To do it by hand instead, register the four hooks in `~/.claude/settings.json` (merge this into
-your existing `"hooks"` key if you already have one) — replace `/absolute/path/to/claude-ram` with
+your existing `"hooks"` key if you already have one) — replace `/absolute/path/to/agents-ram` with
 wherever you cloned it:
 
 ```json
 {
   "hooks": {
     "SessionStart": [
-      { "hooks": [{ "type": "command", "command": "node /absolute/path/to/claude-ram/hooks/session-start.js" }] }
+      { "hooks": [{ "type": "command", "command": "node /absolute/path/to/agents-ram/hooks/session-start.js" }] }
     ],
     "UserPromptSubmit": [
-      { "hooks": [{ "type": "command", "command": "node /absolute/path/to/claude-ram/hooks/user-prompt-submit.js" }] }
+      { "hooks": [{ "type": "command", "command": "node /absolute/path/to/agents-ram/hooks/user-prompt-submit.js" }] }
     ],
     "PostToolUse": [
-      { "hooks": [{ "type": "command", "command": "node /absolute/path/to/claude-ram/hooks/post-tool-use.js" }] }
+      { "hooks": [{ "type": "command", "command": "node /absolute/path/to/agents-ram/hooks/post-tool-use.js" }] }
     ],
     "Stop": [
-      { "hooks": [{ "type": "command", "command": "node /absolute/path/to/claude-ram/hooks/stop.js" }] }
+      { "hooks": [{ "type": "command", "command": "node /absolute/path/to/agents-ram/hooks/stop.js" }] }
     ]
   }
 }
@@ -205,7 +210,7 @@ node bin/prune.js                # dry run: how many tool_use rows are older tha
 node bin/prune.js --days 14 --apply
 ```
 
-To prune automatically at every session start, opt in with `CLAUDE_RAM_PRUNE_DAYS=30` (minimum 7)
+To prune automatically at every session start, opt in with `AGENTS_RAM_PRUNE_DAYS=30` (minimum 7)
 in your environment. Without it nothing is ever deleted.
 
 **Scrub old rows** stored before secret redaction existed:
@@ -230,19 +235,19 @@ handshake; older rows are `claude`.
 don't see nvm's `PATH`):
 
 ```bash
-claude mcp add --scope user claude-ram -- "$(command -v node)" /path/to/claude-ram/bin/mcp.js
+claude mcp add --scope user agents-ram -- "$(command -v node)" /path/to/agents-ram/bin/mcp.js
 ```
 
 ```jsonc
 // ~/.cursor/mcp.json
-{ "mcpServers": { "claude-ram": { "command": "/abs/path/to/node", "args": ["/path/to/claude-ram/bin/mcp.js"] } } }
+{ "mcpServers": { "agents-ram": { "command": "/abs/path/to/node", "args": ["/path/to/agents-ram/bin/mcp.js"] } } }
 ```
 
 ```toml
 # ~/.codex/config.toml
-[mcp_servers.claude-ram]
+[mcp_servers.agents-ram]
 command = "/abs/path/to/node"
-args = ["/path/to/claude-ram/bin/mcp.js"]
+args = ["/path/to/agents-ram/bin/mcp.js"]
 ```
 
 **Automatic capture in Codex and Cursor.** The same four hooks run for every client; the command
@@ -253,20 +258,20 @@ translates the input and output. Codex speaks the Claude Code protocol as-is; Cu
 ```jsonc
 // ~/.codex/hooks.json — then run /hooks inside Codex once to trust them
 { "hooks": {
-  "SessionStart":     [{ "hooks": [{ "type": "command", "command": "node /path/to/claude-ram/hooks/session-start.js --client codex" }] }],
-  "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "node /path/to/claude-ram/hooks/user-prompt-submit.js --client codex" }] }],
-  "PostToolUse":      [{ "hooks": [{ "type": "command", "command": "node /path/to/claude-ram/hooks/post-tool-use.js --client codex" }] }],
-  "Stop":             [{ "hooks": [{ "type": "command", "command": "node /path/to/claude-ram/hooks/stop.js --client codex" }] }]
+  "SessionStart":     [{ "hooks": [{ "type": "command", "command": "node /path/to/agents-ram/hooks/session-start.js --client codex" }] }],
+  "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "node /path/to/agents-ram/hooks/user-prompt-submit.js --client codex" }] }],
+  "PostToolUse":      [{ "hooks": [{ "type": "command", "command": "node /path/to/agents-ram/hooks/post-tool-use.js --client codex" }] }],
+  "Stop":             [{ "hooks": [{ "type": "command", "command": "node /path/to/agents-ram/hooks/stop.js --client codex" }] }]
 } }
 ```
 
 ```jsonc
 // ~/.cursor/hooks.json
 { "version": 1, "hooks": {
-  "sessionStart":       [{ "command": "node /path/to/claude-ram/hooks/session-start.js --client cursor" }],
-  "beforeSubmitPrompt": [{ "command": "node /path/to/claude-ram/hooks/user-prompt-submit.js --client cursor" }],
-  "postToolUse":        [{ "command": "node /path/to/claude-ram/hooks/post-tool-use.js --client cursor" }],
-  "afterAgentResponse": [{ "command": "node /path/to/claude-ram/hooks/stop.js --client cursor" }]
+  "sessionStart":       [{ "command": "node /path/to/agents-ram/hooks/session-start.js --client cursor" }],
+  "beforeSubmitPrompt": [{ "command": "node /path/to/agents-ram/hooks/user-prompt-submit.js --client cursor" }],
+  "postToolUse":        [{ "command": "node /path/to/agents-ram/hooks/post-tool-use.js --client cursor" }],
+  "afterAgentResponse": [{ "command": "node /path/to/agents-ram/hooks/stop.js --client cursor" }]
 } }
 ```
 
@@ -287,7 +292,7 @@ when new memories arrive. Requires embeddings (`node bin/backfill-embeddings.js`
 ### Obsidian export
 
 `npm run export-obsidian [dir]` writes one note per session and per project, with wikilinks
-between related sessions, to `~/claude-ram-vault` by default. Open that folder as a vault and
+between related sessions, to `~/agents-ram-vault` by default (`~/claude-ram-vault` if that one already exists). Open that folder as a vault and
 use Obsidian's graph view. Keep it separate from any hand-curated vault.
 
 ## Configuration
@@ -303,11 +308,11 @@ All tunables are plain constants, no config file needed:
 | `minTerms` | `hybridSearch` in `lib/db.js` | `2` | Keyword matches must share at least this many significant terms with the prompt |
 | `EMBED_SKIP_TOOLS` | `lib/db.js` | `Read, Glob, Grep, LS, ToolSearch` | Tools whose observations are not embedded |
 | `EMBED_TIMEOUT_MS` | hooks | `600-1500` | How long a blocking hook waits for Ollama (cold start takes ~7 s; the backfill waits longer) |
-| `CLAUDE_RAM_VIEWER_PORT` | env var | `4317` | Port for the web dashboard |
-| `CLAUDE_RAM_PRUNE_DAYS` | env var | unset | Opt-in: delete `tool_use` rows older than N days (min 7) at session start |
-| `CLAUDE_RAM_DB_DIR` | env var | `~/.claude/claude-ram` | Where the database and logs live (tests use a temp dir) |
+| `AGENTS_RAM_VIEWER_PORT` | env var | `4317` | Port for the web dashboard |
+| `AGENTS_RAM_PRUNE_DAYS` | env var | unset | Opt-in: delete `tool_use` rows older than N days (min 7) at session start |
+| `AGENTS_RAM_DB_DIR` | env var | `~/.local/share/agents-ram` (`$XDG_DATA_HOME` if set) | Where the database and logs live (tests use a temp dir) |
 | `OLLAMA_URL` | env var | `http://localhost:11434` | Ollama endpoint |
-| `CLAUDE_RAM_SOURCE` | env var | from MCP client name | Force the `source` recorded by `bin/mcp.js` |
+| `AGENTS_RAM_SOURCE` | env var | from MCP client name | Force the `source` recorded by `bin/mcp.js` |
 
 **Project scope.** A session in `/a/b/c` shares memory with that folder, its subfolders and its
 parent folders (down to, but excluding, your home directory), so `apps`, `apps/api` and
@@ -315,7 +320,7 @@ parent folders (down to, but excluding, your home directory), so `apps`, `apps/a
 
 ## Privacy
 
-- Everything is stored in one file: `~/.claude/claude-ram/memory.db`. Nothing is uploaded
+- Everything is stored in one file: `~/.local/share/agents-ram/memory.db`. Nothing is uploaded
   anywhere — the only outbound calls are to your own local Ollama instance.
 - Wrap sensitive text in `<private>...</private>` in a prompt or response and it's replaced with
   `[redacted]` before it's ever written to disk.
@@ -326,12 +331,12 @@ parent folders (down to, but excluding, your home directory), so `apps`, `apps/a
   is not detected. Vectors do not contain the original text.
 - Memory is scoped per project directory — nothing crosses between unrelated projects.
 - Hook failures are swallowed so they never break a session, but they are appended to
-  `~/.claude/claude-ram/hook-errors.log` (capped at 100 KB) and shown by `bin/doctor.js`.
+  `~/.local/share/agents-ram/hook-errors.log` (capped at 100 KB) and shown by `bin/doctor.js`.
 
 ## Uninstall
 
-1. Remove the four entries under `"hooks"` in `~/.claude/settings.json`.
-2. Delete `~/.claude/claude-ram/` to wipe all stored memory.
+1. `node bin/install.js --uninstall` removes the hooks and the MCP server from every client.
+2. Delete `~/.local/share/agents-ram/` to wipe all stored memory.
 3. Optional: `sudo systemctl disable --now ollama` if you don't use it for anything else.
 
 ## Limitations & roadmap
@@ -349,7 +354,7 @@ parent folders (down to, but excluding, your home directory), so `apps`, `apps/a
 - Semantic search does a broad top-K vector scan and filters by project in JS rather than using
   `sqlite-vec`'s partition-key feature — simpler, and fast enough at personal-memory scale, but
   not built to scale to a shared/multi-tenant setup.
-- Retention is opt-in (`bin/prune.js`, `CLAUDE_RAM_PRUNE_DAYS`); there is no pruning UI.
+- Retention is opt-in (`bin/prune.js`, `AGENTS_RAM_PRUNE_DAYS`); there is no pruning UI.
 - Ideas welcome: an MCP tool for on-demand deeper search, a systemd user service for the viewer.
 
 ## License

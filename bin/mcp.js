@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// Servidor MCP (stdio) de Claude RAM: la misma memoria para Claude Code,
+// Servidor MCP (stdio) de Agents RAM: la misma memoria para Claude Code,
 // Codex y Cursor. Sin SDK: MCP por stdio es JSON-RPC 2.0, un mensaje por
 // línea. stdout es solo del protocolo; cualquier diagnóstico va a stderr.
 const readline = require('readline');
 const { openDb, addObservation, addEmbedding, hybridSearch, recentMeaningful } = require('../lib/db');
 const { embed } = require('../lib/embeddings');
 const { stripPrivate, truncateMiddle, dedupeSimilar } = require('../lib/summarize');
+const { env } = require('../lib/paths');
 
 const PROTOCOL_VERSION = '2025-06-18';
 const DEFAULT_LIMIT = 8;
@@ -54,7 +55,7 @@ const TOOLS = [
   },
 ];
 
-// El cliente se identifica en `initialize`; CLAUDE_RAM_SOURCE lo fuerza.
+// El cliente se identifica en `initialize`; AGENTS_RAM_SOURCE lo fuerza.
 function sourceFromClient(name) {
   const n = String(name || '').toLowerCase();
   if (n.includes('codex')) return 'codex';
@@ -64,7 +65,7 @@ function sourceFromClient(name) {
 }
 
 const state = {
-  source: process.env.CLAUDE_RAM_SOURCE || 'mcp',
+  source: env('SOURCE') || 'mcp',
   sessionId: `mcp-${process.pid}-${Date.now()}`,
   db: null,
 };
@@ -127,11 +128,11 @@ async function handle(msg) {
   const { id, method, params = {} } = msg;
   switch (method) {
     case 'initialize': {
-      if (!process.env.CLAUDE_RAM_SOURCE) state.source = sourceFromClient(params.clientInfo && params.clientInfo.name);
+      if (!env('SOURCE')) state.source = sourceFromClient(params.clientInfo && params.clientInfo.name);
       return {
         protocolVersion: params.protocolVersion || PROTOCOL_VERSION,
         capabilities: { tools: {} },
-        serverInfo: { name: 'claude-ram', version: require('../package.json').version },
+        serverInfo: { name: 'agents-ram', version: require('../package.json').version },
         instructions: 'Memoria local compartida entre Claude Code, Codex y Cursor. Consulta memory_recent al empezar y memory_search antes de pedir al usuario contexto que pudo darse en otra sesión.',
       };
     }
@@ -178,7 +179,7 @@ async function onLine(line) {
     const result = await handle(msg);
     if (msg.id !== undefined && result !== undefined) send({ jsonrpc: '2.0', id: msg.id, result });
   } catch (err) {
-    process.stderr.write(`claude-ram mcp: ${err.stack || err}\n`);
+    process.stderr.write(`agents-ram mcp: ${err.stack || err}\n`);
     if (msg.id !== undefined) send({ jsonrpc: '2.0', id: msg.id, error: { code: err.code || -32603, message: err.message } });
   }
 }

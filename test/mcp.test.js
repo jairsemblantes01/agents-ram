@@ -14,7 +14,7 @@ function startServer(env = {}) {
     cwd: os.tmpdir(),
     env: {
       ...process.env,
-      CLAUDE_RAM_DB_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'claude-ram-mcp-')),
+      AGENTS_RAM_DB_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'agents-ram-mcp-')),
       OLLAMA_URL: 'http://127.0.0.1:9', // sin Ollama: solo búsqueda por palabras
       ...env,
     },
@@ -48,7 +48,7 @@ test('mcp: initialize, tools/list, guardar y encontrar una nota con su cliente d
     const init = await s.request('initialize', {
       protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'codex-mcp-client', version: '1' },
     });
-    assert.strictEqual(init.result.serverInfo.name, 'claude-ram');
+    assert.strictEqual(init.result.serverInfo.name, 'agents-ram');
     s.notify('notifications/initialized');
 
     const { result } = await s.request('tools/list', {});
@@ -71,7 +71,7 @@ test('mcp: initialize, tools/list, guardar y encontrar una nota con su cliente d
 });
 
 test('mcp: errores de herramienta vuelven como isError y los secretos no se guardan', async () => {
-  const s = startServer({ CLAUDE_RAM_SOURCE: 'cursor' });
+  const s = startServer({ AGENTS_RAM_SOURCE: 'cursor' });
   try {
     await s.request('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'x' } });
     const bad = await s.call('memory_search', { query: '  ' });

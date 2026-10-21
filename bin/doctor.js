@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Revisa que Claude RAM esté funcionando de verdad: hooks registrados (Claude
+// Revisa que Agents RAM esté funcionando de verdad: hooks registrados (Claude
 // Code, Codex y Cursor), servidor MCP, Ollama al día, vectores guardados y
 // errores recientes. Sale con código 1 si hay algo que corregir. Solo lee,
 // salvo con --clear-errors, que únicamente vacía el log de errores.
@@ -175,7 +175,7 @@ function clearErrors() {
 
 (async () => {
   if (process.argv.includes('--clear-errors')) return clearErrors();
-  console.log('Claude RAM · diagnóstico');
+  console.log('Agents RAM · diagnóstico');
   checkHooks();
   checkMcp();
   checkDb();

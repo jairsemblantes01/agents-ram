@@ -1,11 +1,11 @@
-// Usa una base temporal: nunca toca ~/.claude/claude-ram.
+// Usa una base temporal: nunca toca la memoria real.
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const test = require('node:test');
 const assert = require('node:assert');
 
-process.env.CLAUDE_RAM_DB_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-ram-test-'));
+process.env.AGENTS_RAM_DB_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-ram-test-'));
 
 const {
   openDb, addObservation, recentObservations, recentMeaningful, hybridSearch, pruneToolUse,

@@ -55,7 +55,7 @@ test('withCursorMcp: registra, no duplica y quita sin tocar otros servidores', (
   const start = { mcpServers: { otro: { command: 'x' } } };
   const { config, changed } = withCursorMcp(start, NODE);
   assert.ok(changed);
-  assert.deepStrictEqual(config.mcpServers['claude-ram'], { command: NODE, args: [MCP_SERVER] });
+  assert.deepStrictEqual(config.mcpServers['agents-ram'], { command: NODE, args: [MCP_SERVER] });
   assert.strictEqual(withCursorMcp(config, NODE).changed, false);
   assert.deepStrictEqual(withCursorMcp(config, NODE, { remove: true }).config, start);
 });
@@ -64,12 +64,42 @@ test('withCodexMcp: agrega el bloque TOML y lo quita con sus subtablas, sin toca
   const start = 'model = "gpt-5"\n\n[mcp_servers.otro]\ncommand = "x"\n';
   const { text, changed } = withCodexMcp(start, NODE);
   assert.ok(changed);
-  assert.match(text, /\[mcp_servers\.claude-ram\]\ncommand = "\/opt\/node\/bin\/node"\nargs = \[".*mcp\.js"\]\n$/);
+  assert.match(text, /\[mcp_servers\.agents-ram\]\ncommand = "\/opt\/node\/bin\/node"\nargs = \[".*mcp\.js"\]\n$/);
   assert.strictEqual(withCodexMcp(text, NODE).changed, false);
 
-  const withEnv = text + '\n[mcp_servers.claude-ram.env]\nX = "1"\n\n[profiles.rapido]\nmodel = "o4"\n';
+  const withEnv = text + '\n[mcp_servers.agents-ram.env]\nX = "1"\n\n[profiles.rapido]\nmodel = "o4"\n';
   const removed = withCodexMcp(withEnv, NODE, { remove: true }).text;
-  assert.doesNotMatch(removed, /claude-ram/);
+  assert.doesNotMatch(removed, /agents-ram/);
   assert.match(removed, /\[mcp_servers\.otro\]\ncommand = "x"/);
   assert.match(removed, /\[profiles\.rapido\]\nmodel = "o4"/);
+});
+
+test('withHooks: reemplaza las entradas que apuntan a la carpeta vieja claude-ram, sin duplicar', () => {
+  const old = (f, flag = '') => `node /home/u/proyectos/claude-ram/hooks/${f}${flag}`;
+  const start = {
+    hooks: {
+      Stop: [{ hooks: [foreign] }, { hooks: [{ type: 'command', command: old('stop.js') }] }],
+      SessionStart: [{ hooks: [{ type: 'command', command: old('session-start.js') }] }],
+    },
+  };
+  const { config, added, replaced } = withHooks(start, 'claude', 'node');
+  assert.deepStrictEqual(replaced.sort(), ['SessionStart', 'Stop']);
+  assert.strictEqual(added.length, 4);
+  assert.doesNotMatch(JSON.stringify(config), /\/home\/u\/proyectos\/claude-ram/);
+  assert.deepStrictEqual(config.hooks.Stop[0], { hooks: [foreign] });
+  assert.strictEqual(config.hooks.Stop.length, 2);
+
+  // Desinstalar también reconoce las entradas viejas como propias.
+  assert.deepStrictEqual(withoutHooks(start, 'claude').config.hooks, { Stop: [{ hooks: [foreign] }] });
+});
+
+test('MCP: el servidor con el nombre viejo claude-ram se quita al instalar', () => {
+  const cursor = withCursorMcp({ mcpServers: { 'claude-ram': { command: 'x' }, otro: { command: 'y' } } }, NODE).config;
+  assert.deepStrictEqual(Object.keys(cursor.mcpServers).sort(), ['agents-ram', 'otro']);
+
+  const toml = '[mcp_servers.claude-ram]\ncommand = "node"\nargs = ["/viejo/mcp.js"]\n\n[mcp_servers.otro]\ncommand = "x"\n';
+  const { text } = withCodexMcp(toml, NODE);
+  assert.doesNotMatch(text, /\[mcp_servers\.claude-ram\]|\/viejo\/mcp\.js/);
+  assert.match(text, /\[mcp_servers\.otro\]/);
+  assert.match(text, /\[mcp_servers\.agents-ram\]/);
 });

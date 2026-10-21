@@ -1,5 +1,5 @@
 // Adaptadores de cliente (Codex, Cursor) y los hooks reales corriendo con ellos.
-// Usa una base temporal: nunca toca ~/.claude/claude-ram.
+// Usa una base temporal: nunca toca la memoria real.
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -7,8 +7,8 @@ const { spawnSync } = require('child_process');
 const test = require('node:test');
 const assert = require('node:assert');
 
-const DB_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-ram-clients-'));
-process.env.CLAUDE_RAM_DB_DIR = DB_DIR;
+const DB_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'agents-ram-clients-'));
+process.env.AGENTS_RAM_DB_DIR = DB_DIR;
 
 const { clientFromArgv, normalizeInput, contextPayload } = require('../lib/hook-io');
 const { openDb } = require('../lib/db');
@@ -19,7 +19,7 @@ const PROJECT = path.join(os.homedir(), 'proj', 'clients-test');
 function runHook(name, client, input) {
   const res = spawnSync(process.execPath, [path.join(HOOKS, name), '--client', client], {
     input: JSON.stringify(input),
-    env: { ...process.env, CLAUDE_RAM_DB_DIR: DB_DIR, OLLAMA_URL: 'http://127.0.0.1:9' },
+    env: { ...process.env, AGENTS_RAM_DB_DIR: DB_DIR, OLLAMA_URL: 'http://127.0.0.1:9' },
     encoding: 'utf-8',
   });
   assert.strictEqual(res.status, 0, res.stderr);

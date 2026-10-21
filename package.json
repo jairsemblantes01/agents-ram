@@ -1,10 +1,10 @@
 {
-  "name": "claude-ram",
+  "name": "agents-ram",
   "version": "1.0.0",
-  "description": "Claude RAM — memoria persistente 100% local para Claude Code, Codex y Cursor (hooks + MCP + SQLite FTS5, sin nube ni tokens).",
+  "description": "Agents RAM — memoria persistente 100% local para Claude Code, Codex y Cursor (hooks + MCP + SQLite FTS5, sin nube ni tokens).",
   "bin": {
     "mem-search": "./bin/search.js",
-    "claude-ram-mcp": "./bin/mcp.js"
+    "agents-ram-mcp": "./bin/mcp.js"
   },
   "scripts": {
     "viewer": "node bin/viewer.js",
