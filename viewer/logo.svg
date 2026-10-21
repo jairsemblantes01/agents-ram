@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6ea8fe"/>
+      <stop offset="1" stop-color="#b285e0"/>
+    </linearGradient>
+  </defs>
+  <!-- chip pins -->
+  <g stroke="url(#g)" stroke-width="3" stroke-linecap="round">
+    <line x1="14" y1="4" x2="14" y2="12"/>
+    <line x1="24" y1="4" x2="24" y2="12"/>
+    <line x1="40" y1="4" x2="40" y2="12"/>
+    <line x1="50" y1="4" x2="50" y2="12"/>
+    <line x1="14" y1="52" x2="14" y2="60"/>
+    <line x1="24" y1="52" x2="24" y2="60"/>
+    <line x1="40" y1="52" x2="40" y2="60"/>
+    <line x1="50" y1="52" x2="50" y2="60"/>
+  </g>
+  <!-- chip body -->
+  <rect x="10" y="12" width="44" height="40" rx="7" fill="#171a21" stroke="url(#g)" stroke-width="3"/>
+  <!-- memory / activity trace -->
+  <path d="M18 34 L26 34 L30 24 L36 44 L40 30 L46 34 L54 34" fill="none" stroke="url(#g)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude RAM</title>
+<link rel="icon" type="image/svg+xml" href="/logo.svg">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img src="/logo.svg" alt="" width="28" height="28">
+      <h1>Claude RAM</h1>
+    </div>
+    <div class="controls">
+      <select id="project-select"><option value="">Todos los proyectos</option></select>
+      <select id="source-select" aria-label="Cliente"><option value="">Todos los clientes</option></select>
+      <input id="search-input" type="search" placeholder="Buscar en la memoria… (busqueda hibrida)" />
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-view="feed-view">Actividad</button>
+    <button class="tab" data-view="brain-view">🧠 Cerebro</button>
+  </nav>
+
+  <div id="feed-view" class="view">
+    <section id="stats" class="stats"></section>
+
+    <main>
+      <div id="status" class="status"></div>
+      <ul id="feed" class="feed"></ul>
+      <button id="load-more" class="load-more" hidden>Cargar más</button>
+    </main>
+  </div>
+
+  <div id="brain-view" class="view" hidden>
+    <div class="brain-wrap">
+      <canvas id="brain-canvas"></canvas>
+      <div id="brain-hud" class="brain-hud"></div>
+      <div id="brain-legend" class="brain-legend"></div>
+      <div id="brain-tip" class="brain-tip" hidden></div>
+      <aside id="brain-detail" class="brain-detail" hidden></aside>
+      <button id="brain-refresh" class="brain-refresh" hidden>Hay memorias nuevas · actualizar</button>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script src="/brain.js"></script>
+</body>
+</html>
